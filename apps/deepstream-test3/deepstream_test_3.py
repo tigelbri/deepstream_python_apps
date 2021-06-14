@@ -183,6 +183,17 @@ def create_source_bin(index,uri):
     if not nbin:
         sys.stderr.write(" Unable to create source bin \n")
 
+    uri_port = int(uri)
+    print(uri_port)
+    source = Gst.ElementFactory.make("udpsrc", "file-source")
+    source.set_property("port", uri_port)
+
+    filtercaps = Gst.Caps.from_string("application/x-rtp",
+                        "encoding-name=H264", "payload=96",
+                        "clock-rate=90000")
+    source.set_property("caps", filtercaps)
+
+
     # Source element for reading from the uri.
     # We will use decodebin and let it figure out the container format of the
     # stream and the codec and plug the appropriate demux and decode plugins.
@@ -202,7 +213,7 @@ def create_source_bin(index,uri):
     # cb_newpad callback, we will set the ghost pad target to the video decoder
     # src pad.
     Gst.Bin.add(nbin,uri_decode_bin)
-    bin_pad=nbin.add_pad(Gst.GhostPad.new_no_target("src",Gst.PadDirection.SRC))
+    bin_pad=nbin.add_pad(source)
     if not bin_pad:
         sys.stderr.write(" Failed to add ghost pad in source bin \n")
         return None
